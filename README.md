@@ -1,4 +1,4 @@
-python-ogr-tools
+python-ogr-postgis-tools
 ================
 This repository share simple Python Funtions that, 
 using GDAL/OGR and Psycopg2 libraries, allow to import/export
