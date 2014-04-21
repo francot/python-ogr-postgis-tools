@@ -14,25 +14,27 @@ connString = "PG: host=%s dbname=%s user=%s password=%s" %(host, dbname, user, p
 connString_pg = "dbname=%s user=%s password=%s  host=%s" %(dbname, user, password,  host)
 
 
-def GetPGLayerFieldTypes (table_pg, geometry_field):
+def GetPgLayerFieldTypes (table_pg, geometry_field):
+# return a Dictionary with Pg table field name and Ogr feature
     conn = ogr.Open(connString)
     lyr = conn.GetLayer(table_pg)
     if lyr is None:
         print >> sys.stderr, '[ ERROR ]: layer name = "%s" could not be found in database "%s"' % ( table_pg, databaseName )
         sys.exit(1)
     lyrDefn = lyr.GetLayerDefn()
-    table_fields={}
+    pgtable_fields={}
     for i in range(lyrDefn.GetFieldCount()):
         fieldName =  lyrDefn.GetFieldDefn(i).GetName()
         fieldTypeCode = lyrDefn.GetFieldDefn(i).GetType()
         fieldWidth = lyrDefn.GetFieldDefn(i).GetWidth()
         GetPrecision = lyrDefn.GetFieldDefn(i).GetPrecision()    
-        table_fields[fieldName]= fieldTypeCode, fieldWidth, GetPrecision
+        pgtable_fields[fieldName]= fieldTypeCode, fieldWidth, GetPrecision
     conn.Destroy()
-    return table_fields      
+    return pgtable_fields      
 
    
-def GeometryTypeFromPg (table_pg, geometry_field ):
+def GetGeometryTypeFromPg (table_pg, geometry_field ):
+# return the GeometryType from a Pg Table
     con = psycopg2.connect(connString_pg) 
     cur = con.cursor()
     query ='SELECT ST_AsEWKB(%s)  FROM %s' %(geometry_field, table_pg)
@@ -43,8 +45,8 @@ def GeometryTypeFromPg (table_pg, geometry_field ):
     #TODO: manage MultiGeometry Type
 
     
-def PgTableAsDict (table_pg, geometry_field ):
-    # return a pg table as a Dictionary and transform Geometry to WKB
+def GetPgTableAsDict (table_pg, geometry_field ):
+# return a Pg table as a Dictionary and transform Geometry to WKB
     con = psycopg2.connect(connString_pg)      
     cur = con.cursor(cursor_factory = psycopg2.extras.RealDictCursor)  ### http://wiki.postgresql.org/wiki/Using_psycopg2_with_PostgreSQL  ### http://stackoverflow.com/questions/6739355/dictcursor-doesnt-seem-to-work-under-psycopg2
     query = "SELECT *, ST_AsText (%s) as geom_wkb   FROM %s " %(geometry_field, table_pg)
@@ -54,7 +56,8 @@ def PgTableAsDict (table_pg, geometry_field ):
     #TODO: solve bug for decimal or data field. In this case output is not accepted from createShpFromPg function
 
 
-def createShpFromPg (output_shp,table_pg,geometry_field,srid):
+def CreateShpFromPg (output_shp,table_pg,geometry_field,srid):
+# using the above function, return a shpfile from Pg table  
     # set up the shapefile driver
     driver = ogr.GetDriverByName("ESRI Shapefile")
     # create the data source
@@ -65,11 +68,11 @@ def createShpFromPg (output_shp,table_pg,geometry_field,srid):
     srs = osr.SpatialReference()
     srs.ImportFromEPSG(srid)   
     # create the layer
-    layer = data_source.CreateLayer(output_shp, srs, GeometryTypeFromPg(table_pg,geometry_field))
+    layer = data_source.CreateLayer(output_shp, srs, GetGeometryTypeFromPg(table_pg,geometry_field))
     # Add the fields taking dictionary output from GetPGLayerFieldTypes function
     for k,v in GetPGLayerFieldTypes(table_pg,geometry_field).items():
         # normalize field_name to 10 character
-		k_n=k[:10] 
+	k_n=k[:10] 
         print 'field   '+ k + '       normalized to  ' + k_n
         field_name = ogr.FieldDefn(k_n, v[0])
         field_name.SetWidth (v[1])   
