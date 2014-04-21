@@ -74,8 +74,7 @@ def createShpFromPg (output_shp,table_pg,geometry_field,srid):
         field_name = ogr.FieldDefn(k_n, v[0])
         field_name.SetWidth (v[1])   
         layer.CreateField(field_name)        
-
-    # Process the output dictionary from postgres and add the attributes and features to the shapefile
+    # Process the output dictionary from PgTableAsDict function and add features to the shapefile
     for pg_table_row in PgTableAsDict(table_pg,geometry_field):
         # create the feature
         feature = ogr.Feature(layer.GetLayerDefn())
