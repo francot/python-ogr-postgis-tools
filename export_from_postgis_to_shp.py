@@ -25,7 +25,6 @@ def GetPGLayerFieldTypes (table_pg, geometry_field):
     for i in range(lyrDefn.GetFieldCount()):
         fieldName =  lyrDefn.GetFieldDefn(i).GetName()
         fieldTypeCode = lyrDefn.GetFieldDefn(i).GetType()
-        ### fieldType = lyrDefn.GetFieldDefn(i).GetFieldTypeName(fieldTypeCode) from type code to typ as string,int,real
         fieldWidth = lyrDefn.GetFieldDefn(i).GetWidth()
         GetPrecision = lyrDefn.GetFieldDefn(i).GetPrecision()    
         table_fields[fieldName]= fieldTypeCode, fieldWidth, GetPrecision
@@ -41,10 +40,11 @@ def GeometryTypeFromPg (table_pg, geometry_field ):
     res = cur.fetchone()
     geometrytype = ogr.CreateGeometryFromWkb(bytes(res[0])).GetGeometryType()
     return geometrytype
+    #TODO: manage MultiGeometry Type
 
     
 def PgTableAsDict (table_pg, geometry_field ):
-	# return a pg table as a Dictionary and transform Geometry to WKB
+    # return a pg table as a Dictionary and transform Geometry to WKB
     con = psycopg2.connect(connString_pg)      
     cur = con.cursor(cursor_factory = psycopg2.extras.RealDictCursor)  ### http://wiki.postgresql.org/wiki/Using_psycopg2_with_PostgreSQL  ### http://stackoverflow.com/questions/6739355/dictcursor-doesnt-seem-to-work-under-psycopg2
     query = "SELECT *, ST_AsText (%s) as geom_wkb   FROM %s " %(geometry_field, table_pg)
@@ -97,7 +97,6 @@ def createShpFromPg (output_shp,table_pg,geometry_field,srid):
 
 
 
-createShpFromPg ( '/home/franco/test', 'output.shp_valvola_gb','geom',3003)
 
 
 
