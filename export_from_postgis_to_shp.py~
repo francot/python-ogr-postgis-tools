@@ -32,6 +32,24 @@ def GetPgLayerFieldTypes (table_pg, geometry_field):
     conn.Destroy()
     return pgtable_fields      
 
+
+def GetShapefilesLayerFieldTypes (shapefile):
+# return a Dictionary with shapefile field name and Ogr feature
+	shp = osgeo.ogr.Open(shapefile)
+    layer = shp.GetLayer(0)
+    lyrDefn = layer.GetLayerDefn()
+    shp_fields={}
+    for i in range(lyrDefn.GetFieldCount()):  
+        fieldName =  lyrDefn.GetFieldDefn(i).GetName() 
+        fieldTypeCode = layer_defn.GetFieldDefn(i).GetType()
+        fieldType = lyrDefn.GetFieldDefn(i).GetFieldTypeName(fieldTypeCode)            
+        if fieldType=='String':
+            fieldType='Varchar'
+        fieldType
+        shp_fields[field_name]=fieldType
+
+
+
    
 def GetGeometryTypeFromPg (table_pg, geometry_field ):
 # return the GeometryType from a Pg Table
